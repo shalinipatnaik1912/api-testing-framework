@@ -1,6 +1,5 @@
 import pytest
 import requests
-from requests.auth import HTTPBasicAuth
 
 @pytest.fixture
 def api_client():
@@ -41,4 +40,13 @@ def valid_comment_data():
         "email": "test@example.com",
         "name": "Test Comment",
         "postId": 1
+    }
+
+@pytest.fixture
+def valid_todo_data():
+    """Valid todo data for testing"""
+    return {
+        "title": "Test Todo",
+        "completed": False,
+        "userId": 1
     }
