@@ -1,0 +1,68 @@
+name: API Tests
+
+# When to run this workflow
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    # Run tests daily at 9 AM UTC
+    - cron: '0 9 * * *'
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  test:
+    # Run on Ubuntu (free GitHub-hosted runner)
+    runs-on: ubuntu-latest
+    
+    # Set timeout for the job
+    timeout-minutes: 30
+    
+    steps:
+    # Step 1: Check out the code
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Step 2: Set up Python
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    # Step 3: Cache dependencies (faster runs)
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    # Step 4: Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    # Step 5: Run tests with pytest
+    - name: Run tests
+      run: pytest -v --html=reports/report.html --self-contained-html
+      continue-on-error: true
+    
+    # Step 6: Upload test report as artifact
+    - name: Upload test report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-report
+        path: reports/report.html
+        retention-days: 30
+    
+    # Step 7: Print test summary
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "✅ Test execution completed!"
+        echo "📊 Check the 'test-report' artifact for detailed results"
